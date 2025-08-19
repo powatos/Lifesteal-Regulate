@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "lifesteal-regulate",
+	"version": "${version}",
+	"name": "Lifesteal Regulate",
+	"description": "Lifesteal but regulated",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/lifesteal-regulate/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.powato.lifesteal.LifestealRegulate"
+		],
+		"fabric-datagen": [
+			"net.powato.lifesteal.LifestealRegulateDataGenerator"
+		],
+        "client": [
+            "net.powato.lifesteal.LifestealRegulateClient"
+        ]
+	},
+	"mixins": [
+		"lifesteal-regulate.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.17.2",
+		"minecraft": "~1.21.8",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

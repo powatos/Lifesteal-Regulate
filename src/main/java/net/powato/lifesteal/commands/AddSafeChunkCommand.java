@@ -11,11 +11,14 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.world.chunk.Chunk;
+import net.powato.lifesteal.world.SafeChunkClass;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class AddSafeChunkCommand {
+
+
     public static void register(com.mojang.brigadier.CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(literal("lifesteal_R")
 
@@ -31,8 +34,10 @@ public class AddSafeChunkCommand {
                         ServerWorld World = Player.getWorld();
                         Chunk CurrentChunk = World.getChunk(context.getSource().getPlayer().getBlockPos());
 
+                        SafeChunkClass Registry = World.getPersistentStateManager().getOrCreate(SafeChunkClass.TYPE);
+                        Registry.AddChunk(World, CurrentChunk.getPos().x, CurrentChunk.getPos().z);
 
-
+                        context.getSource().sendFeedback(() -> Text.literal(Registry.getChunkList()), false);
                         return 1;
                     })
                 )

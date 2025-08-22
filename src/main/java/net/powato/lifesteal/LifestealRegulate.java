@@ -25,6 +25,8 @@ public class LifestealRegulate implements ModInitializer {
             AddSafeChunkCommand.register(dispatcher);
         });
 
+        SafeChunks.readMaxSafeChunks(); // init max chunks for server instance based on config
+
 
         PayloadTypeRegistry.playS2C().register(ShowSafeChunksPayload.ID, ShowSafeChunksPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(UpdateSafeChunksPayload.ID, UpdateSafeChunksPayload.CODEC);

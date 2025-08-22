@@ -1,8 +1,7 @@
 # Lifesteal Regulate
 
-
-## TODO
-* Validate safe chunk removal based on player
+## Features
+.todo
 
 ## Known issues
 

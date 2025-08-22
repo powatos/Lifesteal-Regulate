@@ -1,14 +1,26 @@
 package net.powato.lifesteal.commands;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.world.chunk.Chunk;
+import net.powato.lifesteal.SafeChunks.ChunkCountInterface;
 import net.powato.lifesteal.SafeChunks.SafeChunks;
 import net.powato.lifesteal.networking.ShowSafeChunksPayload;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.file.Path;
+import java.util.Map;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -16,7 +28,29 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class AddSafeChunkCommand {
 
-    public static void register(com.mojang.brigadier.CommandDispatcher<ServerCommandSource> dispatcher) {
+    private static int maxSafeChunks;
+
+    private static void readMaxSafeChunks() {
+        Gson gson = new Gson();
+        Path path = FabricLoader.getInstance().getConfigDir().resolve("lifesteal.json");
+
+        Map<String, Object> config;
+
+        try (Reader reader = new FileReader(path.toFile())) {
+            Type type = new TypeToken<Map<String, Object>>() {
+            }.getType();
+            config = gson.fromJson(reader, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+
+        }
+
+        maxSafeChunks = ((Number) config.getOrDefault("maxSafeChunks", 20)).intValue();
+    }
+
+    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+        readMaxSafeChunks();
+
         dispatcher.register(literal("lifesteal_R")
 
                 .then(literal("AddChunk")
@@ -32,6 +66,12 @@ public class AddSafeChunkCommand {
                         MinecraftServer server = World.getServer();
                         assert server != null;
 
+                        ChunkCountInterface holder = (ChunkCountInterface) Player;
+
+                        if (holder.getChunkCount() >= maxSafeChunks) { // if capped chunks
+                            context.getSource().sendError(Text.literal(String.format("You've hit the maximum of %d safeable chunks!", maxSafeChunks)));
+                        }
+
                         String data = ""; // "X,Z,dim"
                         Chunk CurrentChunk = World.getChunk(context.getSource().getPlayer().getBlockPos());
 
@@ -45,6 +85,8 @@ public class AddSafeChunkCommand {
                             context.getSource().sendError(Text.literal("This chunk is already added to the safe list!"));
                             return 0;
                         }
+
+                        holder.incChunkCount();
 
                         return 1;
                     })
@@ -76,6 +118,11 @@ public class AddSafeChunkCommand {
                             context.getSource().sendError(Text.literal("This chunk isn't yet added to the safe list!"));
                             return 0;
                         }
+
+                        ChunkCountInterface holder = (ChunkCountInterface) Player;
+                        holder.decChunkCount();
+
+
                         return 1;
                     })
                 )
@@ -103,6 +150,9 @@ public class AddSafeChunkCommand {
                             context.getSource().sendError(Text.literal("Data Mismatch Exception -> ... SafeChunkClass::SafeChunkClass::ResetChunks"));
                             return 0;
                         }
+
+                        ChunkCountInterface holder = (ChunkCountInterface) Player;
+                        holder.zeroChunkCount();
 
                         return 1;
                     })

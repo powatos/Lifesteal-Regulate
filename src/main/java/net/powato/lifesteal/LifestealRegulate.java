@@ -6,7 +6,12 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.Team;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.powato.lifesteal.SafeChunks.SafeChunks;
 import net.powato.lifesteal.networking.ShowSafeChunksPayload;
 import net.powato.lifesteal.networking.UpdateSafeChunksPayload;
@@ -41,8 +46,25 @@ public class LifestealRegulate implements ModInitializer {
             SafeChunks state = SafeChunks.getServerState(server);
             ServerPlayNetworking.send(Player, new UpdateSafeChunksPayload(state.GetChunkData()));
 
+
+            updatePlayerName(server, Player);
+
         });
     }
 
+    public static void updatePlayerName(MinecraftServer server, ServerPlayerEntity Player){
 
+
+        // show max hearts in tab menu
+        int maxHearts = (int) (Player.getMaxHealth() / 2);
+
+        Scoreboard scoreboard = server.getScoreboard();
+        Team team = scoreboard.getTeam("Hearts" + Player.getUuidAsString());
+        if (team == null) {
+            team = scoreboard.addTeam("Hearts" + Player.getUuidAsString());
+        }
+        team.setPrefix(Text.literal("[❤" + maxHearts + "] ").formatted(Formatting.RED));
+        scoreboard.addScoreHolderToTeam(Player.getNameForScoreboard(), team);
+
+    }
 }

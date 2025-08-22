@@ -3,8 +3,6 @@ package net.powato.lifesteal.SafeChunks;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.serialization.Codec;
-import com.nimbusds.jose.util.ArrayUtils;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.NbtList;
@@ -17,8 +15,6 @@ import net.minecraft.world.PersistentState;
 import static net.powato.lifesteal.LifestealRegulate.MOD_ID;
 import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.powato.lifesteal.networking.ShowSafeChunksPayload;
 import net.powato.lifesteal.networking.UpdateSafeChunksPayload;
 
 import java.io.FileReader;

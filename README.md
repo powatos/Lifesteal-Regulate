@@ -1,7 +1,17 @@
 # Lifesteal Regulate
+by powato
 
 ## Features
-.todo
+
+* Lifesteal
+  * Steal a player's heart by killing them
+  * Players with 1 heart will not get it stolen when killed
+
+* Safe chunks
+  * Add chunks to a safe list that disables PvP
+  
+
+* Command Index: `/lifestealR AddChunk|RemoveChunk|SafechunkVisibility <true|false>|ResetChunks`
 
 ## Known issues
 

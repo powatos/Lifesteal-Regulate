@@ -4,7 +4,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.debug.DebugRenderer;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
@@ -13,9 +12,6 @@ import net.minecraft.world.World;
 import net.powato.lifesteal.SafeChunks.ClientChunkData;
 import net.powato.lifesteal.networking.ShowSafeChunksPayload;
 import net.powato.lifesteal.networking.UpdateSafeChunksPayload;
-
-import java.rmi.registry.Registry;
-import java.util.ArrayList;
 
 public class LifestealRegulateClient implements ClientModInitializer {
 
@@ -62,7 +58,7 @@ public class LifestealRegulateClient implements ClientModInitializer {
                 for (ChunkPos pos : ClientChunkData.GetChunks(dimension)) {
                     BlockPos start = new BlockPos(pos.getStartX(), -64, pos.getStartZ());
                     BlockPos end = start.add(15, 255, 15); // full height of chunk
-                    DebugRenderer.drawBox(worldRenderContext.matrixStack(), worldRenderContext.consumers(), start, end, 0f, 1f, 0f, 0.3f); // red, semi-transparent
+                    DebugRenderer.drawBox(worldRenderContext.matrixStack(), worldRenderContext.consumers(), start, end, 0f, 1f, 0f, 0.3f); // green, semi-transparent
                 }
             }
         });

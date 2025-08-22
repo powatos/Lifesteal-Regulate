@@ -21,7 +21,7 @@ public class AddSafeChunkCommand {
 
                 .then(literal("AddChunk")
                     .executes(context -> {
-                        context.getSource().sendFeedback(() -> Text.literal("Add Called" ), false);
+                        context.getSource().sendFeedback(() -> Text.literal("Safe chunk ADDED" ), false);
 
                             ServerPlayerEntity Player = context.getSource().getEntity() instanceof ServerPlayerEntity p ? p : null; // null if source is not Player, Player if source is Player
                             if (Player == null){
@@ -56,7 +56,7 @@ public class AddSafeChunkCommand {
 
                 .then(literal("RemoveChunk")
                     .executes(context -> {
-                        context.getSource().sendFeedback(() -> Text.literal("Remove Called"), false);
+                        context.getSource().sendFeedback(() -> Text.literal("Safe chunk REMOVED"), false);
 
                         ServerPlayerEntity Player = context.getSource().getEntity() instanceof ServerPlayerEntity p ? p : null; // null if source is not Player, Player if source is Player
                         if (Player == null){
@@ -90,15 +90,16 @@ public class AddSafeChunkCommand {
 
                 .then(literal("ResetChunks")
                     .executes(context -> {
-                        context.getSource().sendFeedback(() -> Text.literal("Reset Called"), false);
+                        context.getSource().sendFeedback(() -> Text.literal("Safe chunks RESET"), false);
 
-                        // TODO: change to only callable on server
-                        ServerPlayerEntity Player = context.getSource().getEntity() instanceof ServerPlayerEntity p ? p : null; // null if source is not Player, Player if source is Player
-                        if (Player == null){
-                            context.getSource().sendError(Text.literal("This command must be run by the server!"));
+
+                        if (context.getSource().getEntity() != null){
+                            context.getSource().sendError(Text.literal("This command must be called on the server!"));
                             return 0;
                         }
-                        ServerWorld World = Player.getWorld();
+
+                        ServerWorld World = context.getSource().getWorld();
+
                         MinecraftServer server = World.getServer();
                         assert server != null;
 
@@ -119,7 +120,7 @@ public class AddSafeChunkCommand {
                 .then(literal("ShowSafeChunks")
                     .then(argument("show", BoolArgumentType.bool())
                         .executes(context -> {
-                            context.getSource().sendFeedback(() -> Text.literal("Show Called"), false);
+                            context.getSource().sendFeedback(() -> Text.literal("Adjusted safe chunk visibility"), false);
 
                             ServerPlayerEntity Player = context.getSource().getEntity() instanceof ServerPlayerEntity p ? p : null; // null if source is not Player, Player if source is Player
                             if (Player == null){

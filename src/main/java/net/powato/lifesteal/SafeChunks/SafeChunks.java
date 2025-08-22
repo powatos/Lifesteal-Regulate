@@ -1,9 +1,12 @@
 package net.powato.lifesteal.SafeChunks;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mojang.serialization.Codec;
 import com.nimbusds.jose.util.ArrayUtils;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
@@ -18,8 +21,14 @@ import net.minecraft.world.chunk.Chunk;
 import net.powato.lifesteal.networking.ShowSafeChunksPayload;
 import net.powato.lifesteal.networking.UpdateSafeChunksPayload;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 /*
 * Overview
@@ -32,8 +41,9 @@ public class SafeChunks extends PersistentState {
 
     private static final String KEY = "SafeChunkRegistry";
     private final NbtList ChunkList = new NbtList();
-    public String ChunkData = ""; // "|X,Z,Dim|X,Z,Dim|X,Z,Dim" ...
+    public String ChunkData = ""; // "|X,Z,Dim,UUID|X,Z,Dim,UUID|X,Z,Dim,UUID" ...
     private ArrayList<ArrayList<String>> localData = new ArrayList<>();
+    private static int maxChunks;
 
     private SafeChunks(){
 
@@ -68,9 +78,26 @@ public class SafeChunks extends PersistentState {
         return state;
     }
 
+    public static void readMaxSafeChunks() {
+        Gson gson = new Gson();
+        Path path = FabricLoader.getInstance().getConfigDir().resolve("lifesteal.json");
+
+        Map<String, Object> config;
+
+        try (Reader reader = new FileReader(path.toFile())) {
+            Type type = new TypeToken<Map<String, Object>>() {
+            }.getType();
+            config = gson.fromJson(reader, type);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        maxChunks = ((Number) config.getOrDefault("maxSafeChunks", 20)).intValue();
+    }
+
     private void ConstructLocalData(){
         localData = new ArrayList<>();
-        if (ChunkData == ""){ return; }
+        if (ChunkData.equals("")){ return; }
 
 
         String current = "";
@@ -86,6 +113,9 @@ public class SafeChunks extends PersistentState {
                         localData.getLast().add(current);
                         break;
                     case 1:
+                        localData.getLast().add(current);
+                        break;
+                    case 2:
                         localData.getLast().add(current);
                         break;
 
@@ -116,7 +146,9 @@ public class SafeChunks extends PersistentState {
         Chunks.remove(0);
 
         for (String Chunk: Chunks){
-            if (Chunk.equals(comparison)){ // in safe chunk
+            String onlyChunkData = Chunk.substring(0, Chunk.length() - 37); // strips uuid from data (removes comma at end)
+
+            if (onlyChunkData.equals(comparison)){ // in safe chunk
                 return true;
             }
         }
@@ -127,15 +159,31 @@ public class SafeChunks extends PersistentState {
     /*
      *
      *
-     * @return int - 0 for successful addition; -1 for chunk already added
+     * @return int - 0 for successful addition; -1 for chunk already added; -2 for player maxxed out chunks
      * */
     public int AddChunk(ServerWorld World, String data){
 
-        if (ChunkData.indexOf(data) != -1){ // chunk exists
+        String onlyChunkData = data.substring(0, data.length() - 36); // strips uuid from data (keeps comma at end)
+
+        if (ChunkData.contains(onlyChunkData)){ // chunk exists
             return -1;
         }
 
-        ChunkData += "|" + data;
+        int playerTotalChunks = 0;
+        for (ArrayList<String> Chunk : localData){
+            String chunkUUID = Chunk.getLast();
+            String playerUUID = data.split(",")[3];
+
+            if (chunkUUID.equals(playerUUID)){
+                playerTotalChunks++;
+            }
+        }
+
+        if (playerTotalChunks >= maxChunks){
+            return -2;
+        }
+
+        ChunkData += data;
         ConstructLocalData();
 
         markDirty();
@@ -147,23 +195,29 @@ public class SafeChunks extends PersistentState {
     /*
     *
     *
-    * @return int - 0 for successful removal; -1 for chunk not in database
+    * @return int - 0 for successful removal; -1 for chunk not in database; -2 for unauthorized remove
     * */
     public int RemoveChunk(ServerWorld World, String data){
-        int result = ChunkData.indexOf(data);
+        String onlyChunkData = data.substring(0, data.length() - 36); // strips uuid from data (keeps comma at end)
+        int result = ChunkData.indexOf(onlyChunkData);
 
-        if (result != -1){
-            ChunkData = ChunkData.substring(0, result-1) + ChunkData.substring(result + data.length());
-            ConstructLocalData();
+        if (result == -1) {return -1;}
 
-            markDirty();
-            UpdateClients(World);
-
-            return 0;
-
-        } else {
-            return -1;
+        String Chunk = ChunkData.substring(result, result + data.length());
+        if (!Chunk.equals(data)){ // chunk was added by different uuid
+            return -2;
         }
+
+        // remove
+        ChunkData = ChunkData.substring(0, result) + ChunkData.substring(result + data.length());
+        ConstructLocalData();
+
+        markDirty();
+        UpdateClients(World);
+
+        return 0;
+
+
 
     }
     /*

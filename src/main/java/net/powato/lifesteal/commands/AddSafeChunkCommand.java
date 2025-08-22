@@ -32,17 +32,21 @@ public class AddSafeChunkCommand {
                         MinecraftServer server = World.getServer();
                         assert server != null;
 
-                        String data = ""; // "X,Z,dim"
+                        String data = "|"; // "X,Z,dim"
                         Chunk CurrentChunk = World.getChunk(context.getSource().getPlayer().getBlockPos());
 
                         data += Integer.toString(CurrentChunk.getPos().x) + ",";
                         data += Integer.toString(CurrentChunk.getPos().z) + ",";
-                        data += World.getRegistryKey().getValue().toString();
+                        data += World.getRegistryKey().getValue().toString() + ",";
+                        data += Player.getUuidAsString();
 
                         SafeChunks serverState = SafeChunks.getServerState(server);
                         int result = serverState.AddChunk(World, data);
                         if (result == -1){
                             context.getSource().sendError(Text.literal("This chunk is already added to the safe list!"));
+                            return 0;
+                        } else if (result == -2){
+                            context.getSource().sendError(Text.literal("You have reached the max safe chunk limit!"));
                             return 0;
                         }
 
@@ -63,17 +67,21 @@ public class AddSafeChunkCommand {
                         MinecraftServer server = World.getServer();
                         assert server != null;
 
-                        String data = ""; // "X,Z,dim"
+                        String data = "|"; // "|X,Z,dim"
                         Chunk CurrentChunk = World.getChunk(context.getSource().getPlayer().getBlockPos());
 
                         data += Integer.toString(CurrentChunk.getPos().x) + ",";
                         data += Integer.toString(CurrentChunk.getPos().z) + ",";
-                        data += World.getRegistryKey().getValue().toString();
+                        data += World.getRegistryKey().getValue().toString() + ",";
+                        data += Player.getUuidAsString();
 
                         SafeChunks serverState = SafeChunks.getServerState(server);
                         int result = serverState.RemoveChunk(World, data);
                         if (result == -1){
                             context.getSource().sendError(Text.literal("This chunk isn't yet added to the safe list!"));
+                            return 0;
+                        } else if (result == -2){
+                            context.getSource().sendError(Text.literal("You are not authorized to remove this chunk from the safe list!"));
                             return 0;
                         }
                         return 1;

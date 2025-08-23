@@ -17,13 +17,13 @@ import net.minecraft.world.PersistentStateType;
 import net.minecraft.world.World;
 import net.powato.lifesteal.networking.UpdateSafeChunksPayload;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 /*
@@ -75,17 +75,29 @@ public class SafeChunks extends PersistentState {
     }
 
     public static void readMaxSafeChunks() {
+        // TODO: add new json file if not found
         Gson gson = new Gson();
         Path path = FabricLoader.getInstance().getConfigDir().resolve("lifesteal.json");
 
         Map<String, Object> config;
+
+        if (!Files.exists(path)){
+            config = new HashMap<>();
+            config.put("maxSafeChunks", 20);
+
+            try (Writer writer = new FileWriter(path.toFile())){
+                gson.toJson(config, writer);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write config", e);
+            }
+        }
 
         try (Reader reader = new FileReader(path.toFile())) {
             Type type = new TypeToken<Map<String, Object>>() {
             }.getType();
             config = gson.fromJson(reader, type);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to read config", e);
         }
 
         maxChunks = ((Number) config.getOrDefault("maxSafeChunks", 20)).intValue();

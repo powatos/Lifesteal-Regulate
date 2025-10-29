@@ -1,5 +1,5 @@
 # Lifesteal Regulate
-by powato
+by powato / made for educational purposes and FUN
 
 ## Features
 
